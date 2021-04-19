@@ -15,19 +15,9 @@ import (
 var version string
 
 func main() {
-	err := innerMain()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-}
-
-func innerMain() (err error) {
-	var outputName string
 	inputName := flag.String("i", "", "file to convert")
-	flag.StringVar(&outputName, "o", "", "outpufilename")
+	outputName := flag.String("o", "", "outpufilename")
 	showVersion := flag.Bool("v", false, "version")
-	// outputFormat := flag.String("f","pdf", "format (pdf, png)")
 	flag.Parse()
 
 	if *showVersion {
@@ -35,12 +25,21 @@ func innerMain() (err error) {
 		return
 	}
 
-	if *inputName == "" {
+	err := convert(*inputName, *outputName)
+
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}
+
+func convert(inputName, outputName string) (err error) {
+	if inputName == "" {
 		return errors.New("missing input file")
 	}
 
 	if outputName == "" {
-		nameOnly := strings.TrimSuffix(*inputName, filepath.Ext(*inputName))
+		nameOnly := strings.TrimSuffix(inputName, filepath.Ext(inputName))
 		outputName = nameOnly + ".pdf"
 	}
 
@@ -50,7 +49,7 @@ func innerMain() (err error) {
 	}
 	defer outputFile.Close()
 
-	reader, err := zip.OpenReader(*inputName)
+	reader, err := zip.OpenReader(inputName)
 	if err != nil {
 		return fmt.Errorf("can't open file %w", err)
 	}
